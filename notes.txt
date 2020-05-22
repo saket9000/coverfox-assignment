@@ -1,0 +1,31 @@
+NOTES
+-----
+
+1. I am using UUID so we dont need to worry about unique keys every time
+2. I am using celery as worker to unblock keys after 60 seconds
+3. In point 5 assuming release key means delete key, therefore I've written a celery worker to check if a keep alive request is not received for a key in the last 5 minutes then it deletes the key
+4. You will need to install requirements mentioned in requirements.txt file to run this code.
+
+
+URL List: 
+1. /key/generate-key/ -> to generate key
+2. /key/get-available-key/ -> to get available generated keys
+3. /key/unblock-key/<uuid:key>/ -> tomake this ket available again
+4. /key/delete-key/<uuid:key>/ -> to delete a key
+5. /key/keep-key-alive/<uuid:key>/ -> to increase key TTL by 5 minutes from now before expiring
+
+DB DESIGN:
+I am using 3 tables as:
+1. AvailableKeys -> I am using this table to generate a key in step 1 and provide this key on step 2
+2. UsedKeys -> Using this table to mark keys as already used and a paramter valid_till using which is applied to check when to unblock this key again using the celery worker
+3. AllKeys -> Maintaining this table to maintain TTL (Time to live) as valid_till and delete keys after 5 minutes
+
+
+STEPS TO RUN:
+1. make a virtual environment
+2. Clone the project
+3. Install dependencies using requirements.txt
+4. Migrate Database using command -> python manage.py migrate
+5. Run server -> python manage.py runserver
+6. Start celery worker -> celery -A coverfox worker -l INFO
+7. Start celery beat -> celery -A coverfox beat -l INFO
